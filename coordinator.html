@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | The Gardening Club</title>
+    <link rel="icon" type="image/png" href="assets/GardeningClub_Main_Logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    
+    <!-- Security Bouncer Script -->
+    <script>
+        (function() {
+            const email = localStorage.getItem("userEmail");
+            const perm = localStorage.getItem("userPerm");
+            if (!email || !perm) {
+                window.location.replace("login.html");
+            }
+        })();
+    </script>
+
+    <style>
+        .dashboard-grid { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; max-width: 1400px; margin: 4rem auto; padding: 0 5%; }
+        .dashboard-sidebar { background: white; border: 1px solid var(--border-light); padding: 2rem; border-radius: 8px; height: fit-content; }
+        .dashboard-content { display: flex; flex-direction: column; gap: 2rem; }
+        .dashboard-card { background: white; border: 1px solid var(--border-light); padding: 3rem; border-radius: 8px; }
+        .resource-card { display: flex; align-items: center; gap: 1.5rem; padding: 1.2rem; border: 1px solid #eee; border-radius: 6px; margin-bottom: 1rem; text-decoration: none; transition: 0.3s; }
+        .resource-card:hover { border-color: var(--corp-blue); background: var(--bg-offwhite); }
+        .resource-card img { height: 32px; border-radius: 4px; }
+        .member-table { width: 100%; border-collapse: collapse; margin-top: 2rem; font-size: 0.85rem; }
+        .member-table th { text-align: left; padding: 1rem; border-bottom: 2px solid var(--corp-blue); color: var(--corp-blue); font-weight: 800; }
+        .member-table td { padding: 1rem; border-bottom: 1px solid #eee; }
+        .delete-btn { background: #ff4d4d; color: white; border: none; padding: 4px 8px; border-radius: 2px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
+        .management-form { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; margin-top: 2rem; background: var(--bg-offwhite); padding: 1.5rem; border-radius: 6px; }
+        .management-form input, .management-form select { padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-family: 'Lexend', sans-serif; font-size: 0.8rem; }
+        .code-block { background: #222; color: #71DF42; padding: 1.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; overflow-x: auto; white-space: pre; margin-top: 1rem; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 3000; display: none; justify-content: center; align-items: center; font-weight: 800; color: var(--corp-blue); }
+        .user-badge { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #eee; }
+        .user-avatar { width: 40px; height: 40px; background: var(--corp-blue); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; }
+    </style>
+</head>
+<body class="hidden-on-load" id="dashboardBody">
+
+    <div id="loading" class="loading-overlay">PROCESSING_SECURE_REQUEST...</div>
+
+    <header class="corp-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-block">
+                <img src="assets/GardeningClub_Main_Logo.png" alt="GC Logo" class="nav-logo">
+                <span class="brand-name">THE GARDENING CLUB</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">HOME</a>
+                <a href="press.html" class="nav-link">PRESS CENTRE</a>
+                <a href="join.html" class="join-btn">JOIN THE CLUB</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <aside class="dashboard-sidebar">
+            <div class="user-badge">
+                <div id="userInitials" class="user-avatar">??</div>
+                <div>
+                    <span id="userNameDisplay" style="display: block; font-weight: 800; font-size: 0.9rem;">Loading...</span>
+                    <span id="userRankDisplay" class="section-label" style="font-size: 0.6rem; margin: 0;">RANK_00</span>
+                </div>
+            </div>
+
+            <span class="section-label">UNIT_RESOURCES</span>
+            <div style="margin-top: 1.5rem;">
+                <a href="https://classroom.google.com/c/ODEzNjc0ODAyNjg4" target="_blank" class="resource-card">
+                    <img src="assets/GoogleClassroomLOGO.jpg" alt="Classroom">
+                    <div class="resource-info">
+                        <h5>Google Classroom</h5>
+                        <p>GC Assignment Hub</p>
+                    </div>
+                </a>
+                <a href="https://drive.google.com/drive/folders/0AI5XuqHs-d5JUk9PVA" target="_blank" class="resource-card">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" alt="Drive">
+                    <div class="resource-info">
+                        <h5>Unit Drive</h5>
+                        <p>R&D Archives</p>
+                    </div>
+                </a>
+            </div>
+            <button class="join-btn" style="width: 100%; margin-top: 2rem; background: #555;" onclick="logout()">TERMINATE_SESSION</button>
+        </aside>
+
+        <div class="dashboard-content">
+            <!-- Member Management (Visible to Rank 5) -->
+            <section id="memberManagement" class="dashboard-card hidden">
+                <span class="section-label">EXECUTIVE_PERSONNEL_MANAGEMENT</span>
+                <h2 class="serif-title" style="font-size: 2rem; color: var(--corp-blue); margin: 0.5rem 0;">Unit Roster</h2>
+                
+                <div class="management-form">
+                    <input type="text" id="newMemName" placeholder="Full Name">
+                    <input type="email" id="newMemEmail" placeholder="Email">
+                    <input type="password" id="newMemPass" placeholder="Password">
+                    <select id="newMemRank">
+                        <option value="1">Guest (Rank 1)</option>
+                        <option value="2">Senior (Rank 2)</option>
+                        <option value="5">Coordinator (Rank 5)</option>
+                    </select>
+                    <button class="join-btn" onclick="createMember()">ADD_PERSONNEL</button>
+                </div>
+
+                <table class="member-table">
+                    <thead>
+                        <tr>
+                            <th>NAME</th>
+                            <th>EMAIL</th>
+                            <th>RANK</th>
+                            <th>ACTION</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberList"></tbody>
+                </table>
+            </section>
+
+            <!-- Press Management Terminal -->
+            <section id="pressTerminal" class="dashboard-card">
+                <span class="section-label">PRESS_MANAGEMENT_TERMINAL</span>
+                <h2 class="serif-title" style="font-size: 2rem; color: var(--corp-blue); margin: 0.5rem 0;">Media Deployment</h2>
+                <div class="press-tool-box">
+                    <div class="input-row">
+                        <label>RELEASE TITLE</label>
+                        <input type="text" id="pTitle" placeholder="Ex: New Hydroponics Installation" oninput="generateCode()" style="width:100%; padding: 1rem; margin-bottom: 1rem;">
+                    </div>
+                    <div class="input-row">
+                        <label>DATE (MON YYYY)</label>
+                        <input type="text" id="pDate" placeholder="Ex: SEP 2026" oninput="generateCode()" style="width:100%; padding: 1rem; margin-bottom: 1rem;">
+                    </div>
+                    <div class="input-row">
+                        <label>SUMMARY</label>
+                        <textarea id="pSummary" rows="3" placeholder="Short 1-sentence summary..." oninput="generateCode()" style="width: 100%; padding: 1rem; border: 1px solid var(--border-light); border-radius: 4px; font-family: 'Lexend', sans-serif;"></textarea>
+                    </div>
+                    <label class="section-label" style="margin-top: 2rem;">GENERATED_HTML_SNIPPET</label>
+                    <div class="code-block" id="outputCode"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbytNQXanKGmlyESTmJXCusY8mgIGM1QAPKyrIm0WPAQceYQImwaOd_PzthC0elFfZpQ/exec";
+
+        async function callPortal(payload) {
+            document.getElementById('loading').style.display = 'flex';
+            try {
+                const response = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                return await response.json();
+            } catch (err) { return { status: "error" }; }
+            finally { document.getElementById('loading').style.display = 'none'; }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = "login.html"; }
+
+        function renderDashboard() {
+            const name = localStorage.getItem("userName");
+            const perm = localStorage.getItem("userPerm");
+            
+            document.getElementById('userNameDisplay').innerText = name;
+            document.getElementById('userRankDisplay').innerText = `RANK_0${perm}`;
+            document.getElementById('userInitials').innerText = name.split(' ').map(n => n[0]).join('');
+
+            if (parseInt(perm) >= 5) {
+                document.getElementById('memberManagement').classList.remove('hidden');
+                loadMembers();
+            }
+        }
+
+        async function loadMembers() {
+            const result = await callPortal({ 
+                action: "getMembers", 
+                requesterEmail: localStorage.getItem("userEmail"),
+                requesterPermission: localStorage.getItem("userPerm")
+            });
+            if (result.status === "success") {
+                const list = document.getElementById('memberList');
+                list.innerHTML = result.members.map(m => `
+                    <tr>
+                        <td>${m.username}</td>
+                        <td>${m.email}</td>
+                        <td><span class="card-tag">RANK_0${m.permission}</span></td>
+                        <td><button class="delete-btn" onclick="deleteMember('${m.email}')">REMOVE</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function createMember() {
+            const email = document.getElementById('newMemEmail').value;
+            const name = document.getElementById('newMemName').value;
+            const pass = document.getElementById('newMemPass').value;
+            const rank = document.getElementById('newMemRank').value;
+
+            const result = await callPortal({
+                action: "createAccount",
+                requesterEmail: localStorage.getItem("userEmail"),
+                requesterPermission: localStorage.getItem("userPerm"),
+                newEmail: email, newUsername: name, newPassword: pass, newPermission: rank
+            });
+            if (result.status === "account_created") { alert("PERSONNEL_ADDED"); loadMembers(); }
+        }
+
+        async function deleteMember(email) {
+            if (!confirm("Confirm personnel removal?")) return;
+            const result = await callPortal({
+                action: "deleteAccount",
+                requesterEmail: localStorage.getItem("userEmail"),
+                requesterPermission: localStorage.getItem("userPerm"),
+                targetEmail: email
+            });
+            if (result.status === "deleted") loadMembers();
+        }
+
+        function generateCode() {
+            const title = document.getElementById('pTitle').value || "RELEASE TITLE";
+            const date = document.getElementById('pDate').value || "SEP 2026";
+            const summary = document.getElementById('pSummary').value || "Summary goes here...";
+            const html = `<div class="press-card"><div class="press-card-img"><img src="assets/press_placeholder.jpg" alt="${title}"></div><div class="press-card-body"><span class="press-date">${date}</span><h4>${title}</h4><p>${summary}</p><a href="#" class="press-card-link">DOWNLOAD PDF LOG</a></div></div>`;
+            document.getElementById('outputCode').innerText = html;
+        }
+
+        renderDashboard();
+        generateCode();
+    </script>
+</body>
+</html>

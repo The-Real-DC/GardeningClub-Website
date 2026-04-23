@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gardening Club Login | St. Colman's Community College</title>
+    <link rel="icon" type="image/png" href="assets/GardeningClub_Main_Logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+    <header class="corp-header">
+        <div class="header-container">
+            <a href="index.html" class="logo-block">
+                <img src="assets/GardeningClub_Main_Logo.png" alt="GC Logo" class="nav-logo">
+                <span class="brand-name">THE GARDENING CLUB</span>
+            </a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">HOME</a>
+                <a href="press.html" class="nav-link">PRESS CENTRE</a>
+                <a href="join.html" class="join-btn">JOIN THE CLUB</a>
+            </nav>
+        </div>
+    </header>
+
+    <div id="loading" class="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; font-weight: 800; color: var(--corp-blue);">
+        VERIFYING_CREDENTIALS...
+    </div>
+
+    <main class="members-login-container">
+        <div class="login-card">
+            <img src="assets/Secure.png" alt="Security Logo" style="height: 80px; margin-bottom: 2rem;">
+            <span class="section-label">PROTECTED_ACCESS_GATEWAY</span>
+            <h2 class="serif-title" style="font-size: 2.5rem; margin: 1rem 0; font-family: 'Playfair Display', serif;">Gardening Club Login</h2>
+            <p style="color: var(--text-grey);">Authorized personnel only. Please enter your club credentials to access the coordinator terminal.</p>
+            
+            <div style="margin-top: 2rem; text-align: left;">
+                <div class="input-row" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.7rem; font-weight: 800; color: var(--corp-blue); margin-bottom: 0.5rem;">UNIT EMAIL</label>
+                    <input type="email" id="loginEmail" placeholder="admin@colmans.ie" style="width: 100%; padding: 1rem; border: 1px solid var(--border-light); border-radius: 4px;">
+                </div>
+                <div class="input-row" style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-size: 0.7rem; font-weight: 800; color: var(--corp-blue); margin-bottom: 0.5rem;">ACCESS PASSWORD</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" style="width: 100%; padding: 1rem; border: 1px solid var(--border-light); border-radius: 4px;">
+                </div>
+            </div>
+            
+            <button class="join-btn" style="width: 100%; padding: 1.2rem; font-weight: 800;" onclick="handleLogin()">INITIALIZE_SECURE_ENTRY</button>
+
+            <p style="margin-top: 3rem; font-size: 0.7rem; color: var(--label-grey); font-family: 'JetBrains Mono', monospace;">
+                ENCRYPTION: ACTIVE // SYNC: CLOUD_SHEET
+            </p>
+        </div>
+    </main>
+
+    <footer class="corp-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <img src="assets/SchoolLOGO.png" alt="School Logo" class="footer-school-logo">
+                <span class="footer-school-name">St. Colman's Community College</span>
+                <p class="footer-tagline">Midleton, Co. Cork. Bridging biological innovation with institutional sustainability.</p>
+            </div>
+            <div class="footer-links">
+                <h4>CONNECT WITH US</h4>
+                <div class="footer-social-grid">
+                    <a href="https://www.colmans.ie/" target="_blank">
+                        <img src="assets/GardeningClub_Main_Logo.png" alt="Web" class="footer-social-icon" style="filter: grayscale(1);">
+                    </a>
+                    <a href="https://www.instagram.com/colmansmidleton/" target="_blank">
+                        <img src="assets/Instagram_logo_2022.svg" alt="Instagram" class="footer-social-icon">
+                    </a>
+                    <a href="https://www.facebook.com/colmansmidleton/" target="_blank">
+                        <img src="assets/FACEBOOKLOGO.png" alt="Facebook" class="footer-social-icon">
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            COPYRIGHT © THE GARDENING CLUB 2026 // ALL RIGHTS RESERVED
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbytNQXanKGmlyESTmJXCusY8mgIGM1QAPKyrIm0WPAQceYQImwaOd_PzthC0elFfZpQ/exec";
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            const loader = document.getElementById('loading');
+
+            if(!email || !pass) return alert("Please enter full credentials.");
+
+            loader.style.display = 'flex';
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "login",
+                        email: email,
+                        password: pass
+                    })
+                });
+                const result = await response.json();
+
+                if (result.status === "success") {
+                    localStorage.setItem("userEmail", email);
+                    localStorage.setItem("userPerm", result.user.permission);
+                    localStorage.setItem("userName", result.user.username);
+                    window.location.href = "coordinator.html";
+                } else {
+                    alert("ACCESS_DENIED: Invalid Credentials.");
+                }
+            } catch (err) {
+                alert("SYSTEM_ERROR: Connection to sheet failed.");
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
